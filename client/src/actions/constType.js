@@ -1,3 +1,11 @@
 export const LOADING_USERS = "LOADING_USERS";
 export const GET_USERS = "GET_USERS";
+export const GET_USERS_FAILED = "GET_USERS_FAILED";
+export const LOADING_USER = "LOADING_USER";
+export const GET_USER = "GET_USER";
+export const POSTING_USER = "POSTING_USER";
 export const POST_USER = "POST_USER";
+export const USER_UPDATE = "USER_UPDATE";
+export const REDIRECT_USER = "REDIRECT_USER";
+export const UPDATE_SCORES = "UPDATE_SCORES";
+export const SCORE_SHARE = "SCORE_SHARE";

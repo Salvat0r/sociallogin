@@ -1,0 +1,32 @@
+$mobile: 320px
+$tablet: 768px
+$tablet-landscape: 1024px
+$desktop: 1382px
+
+@mixin only-mobile
+    @media (max-width: #{$mobile})
+        @content
+
+@mixin mobile-to-tablet
+    @media only screen and (max-width: $tablet)
+        @content
+
+@mixin mobile-to-tablet-landscape
+    @media (max-width: $tablet-landscape)
+        @content
+
+@mixin mobile-to-desktop
+    @media (max-width: $desktop)
+        @content
+
+@mixin only-tablet
+   @media (min-width: $mobile) and (max-width: $tablet)
+       @content
+
+@mixin only-tablet-landscape
+   @media (min-width: $tablet) and (max-width: $tablet-landscape)
+       @content
+
+@mixin only-desktop
+   @media (min-width: $tablet-landscape) and (max-width: $desktop)
+       @content

@@ -3,7 +3,7 @@ import FacebookLogin from 'react-facebook-login';
 import GoogleLogin from 'react-google-login';
 import { Redirect } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { postUserAction } from '../../actions';
+import { getUsersAction, postUserAction } from '../../actions';
 
 class Welcome extends Component {
     constructor(props) {
@@ -15,8 +15,16 @@ class Welcome extends Component {
         this.signup = this.signup.bind(this);
     }
 
+    componentDidMount() {
+        this.props.getUsersAction();
+    }
+
     signup(res, type) {
+
+        const { users } = this.props;
+
         let postData;
+
         if (type === 'facebook' && res.email) {
             postData = {
                 name: res.name,
@@ -24,7 +32,8 @@ class Welcome extends Component {
                 email: res.email,
                 provider_id: res.id,
                 token: res.accessToken,
-                provider_pic: res.picture.data.url
+                provider_pic: res.picture.data.url,
+                condividi: 0
             };
         }
 
@@ -35,25 +44,34 @@ class Welcome extends Component {
                 email: res.w3.U3,
                 provider_id: res.El,
                 token: res.Zi.access_token,
-                provider_pic: res.w3.Paa
+                provider_pic: res.w3.Paa,
+                condividi: 0
             };
         }
 
         if (postData) {
-            this.props.postUserAction(postData)
-            .then((result) => {
-                let responseJson = result;
-                sessionStorage.setItem("userData", JSON.stringify(responseJson.payload));
-                this.setState({ redirect: true });
-            });
+            //verifico se l'utente appena loggato è già presente tra gli utentsi sul DB
+            if (users.length > 0 && users.find(user => user.provider_id === postData.provider_id)) {
+                sessionStorage.setItem("userData", JSON.stringify(postData));
+                this.setState({redirect: true})
+            } else { 
+                this.props.postUserAction(postData).then(()=>{
+                    this.setState({redirect: true})
+                });                
+            }
         } else {
             console.log('Errore nel reperimento info login');
-         }
+        }
+
     }
 
     render() {
 
-        if (this.state.redirect || sessionStorage.getItem('userData')) {
+        const { redirect } = this.state;
+
+        let data = JSON.parse(sessionStorage.getItem('userData'));
+
+        if ( redirect && data.name ) {
             return (<Redirect to={'/home'} />)
         }
 
@@ -85,10 +103,11 @@ class Welcome extends Component {
     }
 }
 const mapStateToProps = (state) => {
-    //console.log(state);
     return {
-        post_user: state.post_user
+        post_user: state.post_user,
+        users: state.users,
+        redirect: state.redirect
     }
 }
 
-export default connect(mapStateToProps, { postUserAction })(Welcome);
+export default connect(mapStateToProps, { getUsersAction, postUserAction })(Welcome);

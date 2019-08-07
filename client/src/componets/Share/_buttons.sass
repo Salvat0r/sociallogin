@@ -1,0 +1,29 @@
+.ShareButtons
+    @include crossBrowser(display,flex)
+    @include crossBrowser(flex-direction,row wrap)
+    @include crossBrowser(justify-content,center)
+    @include crossBrowser(align-items,center)
+    @include mobile-to-tablet
+        @include crossBrowser(flex-direction,column)
+    .SocialMediaShareButton 
+        @include crossBrowser(flex,1)
+        max-width: 280px
+        margin: 0.5rem
+        @include mobile-to-tablet
+            width: 280px
+        .innerButtonSocial
+            @include crossBrowser(display,flex)
+            @include crossBrowser(justify-content,center)
+            @include crossBrowser(align-items,center)
+            div 
+                float: left
+    .SocialMediaShareButton--facebook, .SocialMediaShareButton--twitter, .SocialMediaShareButton--whatsapp, .SocialMediaShareButton--linkedin
+        background-color: #3b5998
+        color: white
+        border-radius: 15px
+    .SocialMediaShareButton--twitter
+        background-color: #00aced
+    .SocialMediaShareButton--whatsapp
+        background-color: #2cb742
+    .SocialMediaShareButton--linkedin
+        background-color: #007fb1
