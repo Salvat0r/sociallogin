@@ -10,6 +10,8 @@ import LoadingRotation from '../LoadingRotation';
 import anime from 'animejs/lib/anime.es.js';
 
 import { ReactComponent as Percorso } from '../../assets/percorso.svg';
+import { ReactComponent as Mappa } from '../../assets/mappa.svg';
+import { ReactComponent as PinBabbo } from '../../assets/pinbabbo.svg';
 
 
 class Home extends Component {
@@ -62,25 +64,23 @@ class Home extends Component {
 
 
         //ANIMAZIONE Percorso
-        var path = anime.path('.Circuito path');
+        var path = anime.path('.Circuito polyline');
 
-        anime.set('.square', {
-            translateX: 100,
-            translateY: 100,
-        });
-
-        var motionPath = anime({
+        var ping = anime({
             targets: '.square',
             translateX: path('x'),
             translateY: path('y'),
-            rotate: path('angle'),
+            //rotate: path('angle'),
             delay: 200,
-            endDelay: 200,
             easing: 'easeOutExpo',
-            duration: 100000,
+            duration: 5000,
             loop: false,
             autoplay: false,
+            elasticity: 500
         });     
+
+        ping.seek((this.state.daskborad.kmPerc / 100) * ping.duration);
+
 
 
     }
@@ -303,8 +303,11 @@ class Home extends Component {
 
 
 <div className="Circuito">
-    <Percorso />
-    <div className="square"></div>
+    <div className="inner">
+        <Mappa className="Mappa"/>
+        <Percorso className="Percorso"/>
+        <div className="square"><PinBabbo /></div>
+    </div>
 </div>
 
 
