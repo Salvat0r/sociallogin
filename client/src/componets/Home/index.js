@@ -2,7 +2,15 @@ import React, { Component } from 'react';
 import { Redirect } from 'react-router-dom';
 import { connect } from 'react-redux';
 import { getUsersAction, updateUserAction, getUserAction, scoreShareAction } from '../../actions';
+
 import Share from '../Share';
+import ProgressBar from '../ProgressBar';
+import LoadingRotation from '../LoadingRotation';
+
+import anime from 'animejs/lib/anime.es.js';
+
+import { ReactComponent as Percorso } from '../../assets/percorso.svg';
+
 
 class Home extends Component {
     constructor(props) {
@@ -11,14 +19,35 @@ class Home extends Component {
             daskborad: {},
             nextStepDisplay: {},
             redirect: false,
-            condiviso: false
+            condiviso: false,
+            orientation: ''
         };
         this.dashboardMeasure = this.dashboardMeasure.bind(this);
         this.displayNextStep = this.displayNextStep.bind(this);        
-        this.countScoreShare = this.countScoreShare.bind(this);        
+        this.countScoreShare = this.countScoreShare.bind(this); 
+
+        this.kmRef = React.createRef();
+        this.calRef = React.createRef();
+        this.perKmRef = React.createRef();
+        this.perCalRef = React.createRef();
+    }
+
+    getOrientation = () => {
+        if (window.innerWidth < window.innerHeight) {
+            this.setState({ orientation: 'portrait' });
+        }
+        else {
+            this.setState({ orientation: 'landscape' });
+        }
     }
 
     componentDidMount() {
+
+        this.getOrientation();
+
+        window.addEventListener('orientationchange', () => {
+            this.getOrientation();
+        });
 
         let data = JSON.parse(sessionStorage.getItem('userData'));
 
@@ -30,6 +59,30 @@ class Home extends Component {
         if( data && data.provider_id ) {
             this.props.getUserAction(data.provider_id);
         }
+
+
+        //ANIMAZIONE Percorso
+        var path = anime.path('.Circuito path');
+
+        anime.set('.square', {
+            translateX: 100,
+            translateY: 100,
+        });
+
+        var motionPath = anime({
+            targets: '.square',
+            translateX: path('x'),
+            translateY: path('y'),
+            rotate: path('angle'),
+            delay: 200,
+            endDelay: 200,
+            easing: 'easeOutExpo',
+            duration: 100000,
+            loop: false,
+            autoplay: false,
+        });     
+
+
     }
 
     countScoreShare = () => {
@@ -61,6 +114,7 @@ class Home extends Component {
         let kmPerc = ((km / kmTot) * 100).toFixed(1);
         let cal = Math.round(sommaScore * calorie);
         let calPerc = ((cal / calorieTotale) * 100).toFixed(1);
+        let kmMancanti = kmTot - km;
         return( 
             this.setState(prevState => ({
                 daskborad: {                   
@@ -68,7 +122,8 @@ class Home extends Component {
                     km: km,
                     kmPerc: kmPerc,
                     cal: cal,
-                    calPerc: calPerc  
+                    calPerc: calPerc,
+                    kmMancanti: kmMancanti
                 }
             }))
         );
@@ -158,30 +213,104 @@ class Home extends Component {
     render() {
         const { daskborad, nextStepDisplay } = this.state;
         const { redirect } = this.state;
+
         if (!sessionStorage.getItem('userData') || redirect) {
             return (<Redirect to={'/'} />)
         }       
 
+        if (this.state.orientation == 'portrait') {
+            return (<LoadingRotation />)
+        }
+
+
         const userData = JSON.parse(sessionStorage.getItem('userData'));
+        const kmRef = this.kmRef.current;
+        const calRef = this.calRef.current;
+        const perKmRef = this.perKmRef.current;
+        const perCalRef = this.perCalRef.current;
+
+        if(kmRef && daskborad.km){
+
+            var start = {daskborad: 0};            
+            anime({
+                targets: start,
+                daskborad: daskborad.km,
+                round: 1,
+                easing: 'linear',
+                update: function() {
+                    kmRef.innerHTML = JSON.stringify(start.daskborad);
+                },
+                duration: 1000,
+            });
+            anime({
+                targets: start,
+                daskborad: daskborad.cal,
+                round: 1,
+                easing: 'linear',
+                update: function() {
+                    calRef.innerHTML = JSON.stringify(start.daskborad);
+                },
+                duration: 1000,
+                delay: 500
+            });
+            var startPerc = {daskborad: '0%'};  
+            anime({
+                targets: startPerc,
+                daskborad: daskborad.kmPerc,
+                round: 10,
+                easing: 'linear',
+                update: function() {
+                    perKmRef.innerHTML = JSON.stringify(startPerc.daskborad);
+                },
+                duration: 1000,
+                delay: 1500
+            });
+            anime({
+                targets: startPerc,
+                daskborad: daskborad.calPerc,
+                round: 10,
+                easing: 'linear',
+                update: function() {
+                    perCalRef.innerHTML = JSON.stringify(startPerc.daskborad);
+                },
+                duration: 1000,
+                delay: 1800
+            });
+        }
+
+
 
         return (            
             <div>
                 <h1>Grazie {userData.name}!</h1>
-
                 <img alt="profilo" src={userData.provider_pic} width="35"/>
                 <br />
                 <br />
-                Km: {daskborad.km}
+                Km: <span ref={this.kmRef}>{daskborad.km}</span>
                 <br />
-                Cal: {daskborad.cal}
+                Cal: <span ref={this.calRef}>{daskborad.cal}</span>
                 <br />
-                Km: {daskborad.kmPerc}%
+                Km: <span ref={this.perKmRef}>{daskborad.kmPerc}%</span>
                 <br />
-                Energie: {daskborad.calPerc}%
-                <br />
-                Next Step: Mancano: <span>{nextStepDisplay.dif}</span> calorie per arrivare in <span>{nextStepDisplay.continente}</span>
+                Energie: <span ref={this.perCalRef}>{daskborad.calPerc}%</span>
                 <br />
                 <Share share={this.shareHandler}/>
+                <div className="NextStep">
+                    <ProgressBar percentage={daskborad.kmPerc} kmPercorsi={daskborad.km} kmMancanti={daskborad.kmMancanti} />
+                    Mancano: <span>{nextStepDisplay.dif}</span> calorie per arrivare in <span>{nextStepDisplay.continente}</span>
+                </div>
+
+
+
+<div className="Circuito">
+    <Percorso />
+    <div className="square"></div>
+</div>
+
+
+
+
+
             </div>
         );
     }

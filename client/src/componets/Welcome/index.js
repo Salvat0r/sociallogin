@@ -51,7 +51,13 @@ class Welcome extends Component {
 
         if (postData) {
             //verifico se l'utente appena loggato è già presente tra gli utentsi sul DB
-            if (users.length > 0 && users.find(user => user.provider_id === postData.provider_id)) {
+            let utenti = Object.values(users);
+
+            console.log(utenti);
+
+            const result = utenti.find((user) => user.provider_id === postData.provider_id);
+            
+            if ( result ) {
                 sessionStorage.setItem("userData", JSON.stringify(postData));
                 this.setState({redirect: true})
             } else { 
