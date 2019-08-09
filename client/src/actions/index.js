@@ -1,4 +1,4 @@
-import { LOADING_USERS, GET_USERS, LOADING_USER, GET_USER, POSTING_USER, POST_USER, USER_UPDATE, UPDATE_SCORES, SCORE_SHARE} from './constType';
+import { IS_MOBILE, GET_ORIENTATION, LOADING_USERS, GET_USERS, LOADING_USER, GET_USER, POSTING_USER, POST_USER, USER_UPDATE, UPDATE_SCORES, SCORE_SHARE} from './constType';
 import Users from '../apis/Users';
 
 export const getUsersAction = () => async dispatch => {
@@ -53,5 +53,17 @@ export const scoreShareAction = (scoreShare) => async dispatch => {
     dispatch({
         type: SCORE_SHARE,
         payload: scoreShare
+    });
+}
+
+export const getOrientationAction = () => async dispatch => {
+    dispatch({
+        type: GET_ORIENTATION
+    });
+}
+
+export const isMobileAction = () => async dispatch => {
+    dispatch({
+        type: IS_MOBILE
     });
 }

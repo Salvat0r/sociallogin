@@ -9,3 +9,5 @@ export const USER_UPDATE = "USER_UPDATE";
 export const REDIRECT_USER = "REDIRECT_USER";
 export const UPDATE_SCORES = "UPDATE_SCORES";
 export const SCORE_SHARE = "SCORE_SHARE";
+export const GET_ORIENTATION = "GET_ORIENTATION";
+export const IS_MOBILE = "IS_MOBILE";

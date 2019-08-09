@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Redirect } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { getUsersAction, updateUserAction, getUserAction, scoreShareAction } from '../../actions';
+import { isMobileAction, getOrientationAction, getUsersAction, updateUserAction, getUserAction, scoreShareAction } from '../../actions';
 
 import Share from '../Share';
 import ProgressBar from '../ProgressBar';
@@ -18,11 +18,10 @@ class Home extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            daskborad: {},
+            dashboard: {},
             nextStepDisplay: {},
             redirect: false,
             condiviso: false,
-            orientation: ''
         };
         this.dashboardMeasure = this.dashboardMeasure.bind(this);
         this.displayNextStep = this.displayNextStep.bind(this);        
@@ -34,76 +33,47 @@ class Home extends Component {
         this.perCalRef = React.createRef();
     }
 
-    getOrientation = () => {
-        if (window.innerWidth < window.innerHeight) {
-            this.setState({ orientation: 'portrait' });
-        }
-        else {
-            this.setState({ orientation: 'landscape' });
-        }
-    }
+    componentDidMount() {   
 
-    componentDidMount() {
-
-        this.getOrientation();
-
+        window.addEventListener("resize", this.animationCircuitoMappa);
         window.addEventListener('orientationchange', () => {
-            this.getOrientation();
+            this.props.getOrientationAction();
         });
 
         let data = JSON.parse(sessionStorage.getItem('userData'));
-
         this.props.getUsersAction()
         .then(()=>{
             this.countScoreShare();                
         });
-
         if( data && data.provider_id ) {
             this.props.getUserAction(data.provider_id);
         }
 
+        this.animationCircuitoMappa();
+        this.props.getOrientationAction();
+        this.props.isMobileAction();
+    }
 
-        //ANIMAZIONE Percorso
-        var path = anime.path('.Circuito polyline');
-
-        var ping = anime({
-            targets: '.square',
-            translateX: path('x'),
-            translateY: path('y'),
-            //rotate: path('angle'),
-            delay: 200,
-            easing: 'easeOutExpo',
-            duration: 5000,
-            loop: false,
-            autoplay: false,
-            elasticity: 500
-        });     
-
-        ping.seek((this.state.daskborad.kmPerc / 100) * ping.duration);
-
-
-
+    componentWillUnmount = () => {
+        window.removeEventListener("resize", this.animationCircuitoMappa);
     }
 
     countScoreShare = () => {
-            let { users } = this.props;
-            let size = Object.keys(users).length;
-
-            if (users && size > 0) {
-                //calcola e somma tutte le cifre della colonna "condivisi"
-                let totalShare = 0;
-
-                for (const [key, value] of Object.entries(users)) {
-                    if(value.condividi == 1){
-                        totalShare++;
-                    }
+        let { users } = this.props;
+        let size = Object.keys(users).length;
+        if (users && size > 0) {
+            //calcola e somma tutte le cifre della colonna "condivisi"
+            let totalShare = 0;
+            for (const [key, value] of Object.entries(users)) {
+                if(value.condividi == 1){
+                    totalShare++;
                 }
-
-                this.props.scoreShareAction(totalShare).then(()=>{
-                    this.dashboardMeasure();
-                    this.displayNextStep();       
-                })
-            }  
+            }
+            this.props.scoreShareAction(totalShare).then(()=>{
+                this.dashboardMeasure();
+                this.displayNextStep();       
+            })
+        }  
     }
 
     dashboardMeasure = () => {
@@ -117,8 +87,8 @@ class Home extends Component {
         let kmMancanti = kmTot - km;
         return( 
             this.setState(prevState => ({
-                daskborad: {                   
-                    ...prevState.daskborad,
+                dashboard: {                   
+                    ...prevState.dashboard,
                     km: km,
                     kmPerc: kmPerc,
                     cal: cal,
@@ -131,10 +101,10 @@ class Home extends Component {
 
     displayNextStep = () => {
         let { continenti } = this.props.default;
-        let { daskborad } = this.state;
-        let calPerc = daskborad.calPerc;
+        let { dashboard } = this.state;
+        let calPerc = dashboard.calPerc;
         if (calPerc < 20) {
-            let dif = continenti.asia - daskborad.cal;
+            let dif = continenti.asia - dashboard.cal;
             return (
                 this.setState(prevState => ({
                     nextStepDisplay: {
@@ -146,7 +116,7 @@ class Home extends Component {
             );
         }
         if (calPerc < 40) {
-            let dif = continenti.oceania - daskborad.cal;
+            let dif = continenti.oceania - dashboard.cal;
             return (
                 this.setState(prevState => ({
                     nextStepDisplay: {
@@ -158,7 +128,7 @@ class Home extends Component {
             );
         }
         if (calPerc < 60) {
-            let dif = continenti.europa - daskborad.cal;
+            let dif = continenti.europa - dashboard.cal;
             return (
                 this.setState(prevState => ({
                     nextStepDisplay: {
@@ -170,7 +140,7 @@ class Home extends Component {
             );
         }
         if (calPerc < 80) {
-            let dif = continenti.africa - daskborad.cal;
+            let dif = continenti.africa - dashboard.cal;
             return (
                 this.setState(prevState => ({
                     nextStepDisplay: {
@@ -182,7 +152,7 @@ class Home extends Component {
             );
         }
         if (calPerc > 80) {
-            let dif = continenti.america - daskborad.cal;
+            let dif = continenti.america - dashboard.cal;
             return (
                 this.setState(prevState => ({
                     nextStepDisplay: {
@@ -210,75 +180,95 @@ class Home extends Component {
         }
     }
 
-    render() {
-        const { daskborad, nextStepDisplay } = this.state;
-        const { redirect } = this.state;
+    animationCircuitoMappa = () => {
+        var path = anime.path('.Circuito polyline');
+        var ping = anime({
+            targets: '.square',
+            translateX: path('x'),
+            translateY: path('y'),
+            //rotate: path('angle'),
+            delay: 200,
+            easing: 'easeOutExpo',
+            duration: 5000,
+            loop: false,
+            autoplay: false,
+            elasticity: 500
+        });
+        ping.seek((this.state.dashboard.kmPerc / 100) * ping.duration);
+    }
 
-        if (!sessionStorage.getItem('userData') || redirect) {
-            return (<Redirect to={'/'} />)
-        }       
-
-        if (this.state.orientation == 'portrait') {
-            return (<LoadingRotation />)
-        }
-
-
-        const userData = JSON.parse(sessionStorage.getItem('userData'));
+    animationDataDashboard = () => {
+        const { dashboard } = this.state;
         const kmRef = this.kmRef.current;
         const calRef = this.calRef.current;
         const perKmRef = this.perKmRef.current;
         const perCalRef = this.perCalRef.current;
 
-        if(kmRef && daskborad.km){
+        if (kmRef && dashboard.km) {
 
-            var start = {daskborad: 0};            
+            var start = { dashboard: 0 };
             anime({
                 targets: start,
-                daskborad: daskborad.km,
+                dashboard: dashboard.km,
                 round: 1,
                 easing: 'linear',
-                update: function() {
-                    kmRef.innerHTML = JSON.stringify(start.daskborad);
+                update: function () {
+                    kmRef.innerHTML = JSON.stringify(start.dashboard);
                 },
                 duration: 1000,
             });
             anime({
                 targets: start,
-                daskborad: daskborad.cal,
+                dashboard: dashboard.cal,
                 round: 1,
                 easing: 'linear',
-                update: function() {
-                    calRef.innerHTML = JSON.stringify(start.daskborad);
+                update: function () {
+                    calRef.innerHTML = JSON.stringify(start.dashboard);
                 },
                 duration: 1000,
                 delay: 500
             });
-            var startPerc = {daskborad: '0%'};  
+            var startPerc = { dashboard: '0%' };
             anime({
                 targets: startPerc,
-                daskborad: daskborad.kmPerc,
+                dashboard: dashboard.kmPerc,
                 round: 10,
                 easing: 'linear',
-                update: function() {
-                    perKmRef.innerHTML = JSON.stringify(startPerc.daskborad);
+                update: function () {
+                    perKmRef.innerHTML = JSON.stringify(startPerc.dashboard);
                 },
                 duration: 1000,
                 delay: 1500
             });
             anime({
                 targets: startPerc,
-                daskborad: daskborad.calPerc,
+                dashboard: dashboard.calPerc,
                 round: 10,
                 easing: 'linear',
-                update: function() {
-                    perCalRef.innerHTML = JSON.stringify(startPerc.daskborad);
+                update: function () {
+                    perCalRef.innerHTML = JSON.stringify(startPerc.dashboard);
                 },
                 duration: 1000,
                 delay: 1800
             });
         }
 
+    }
+    
+    render() {
+        const { dashboard, nextStepDisplay } = this.state;
+        const { redirect } = this.state;
 
+        if (!sessionStorage.getItem('userData') || redirect) {
+            return (<Redirect to={'/'} />)
+        }       
+
+        if (this.props.orientation == 'portrait' && this.props.isMobile) {
+            return (<LoadingRotation />)
+        }
+
+        const userData = JSON.parse(sessionStorage.getItem('userData'));
+        this.animationDataDashboard();
 
         return (            
             <div>
@@ -286,34 +276,26 @@ class Home extends Component {
                 <img alt="profilo" src={userData.provider_pic} width="35"/>
                 <br />
                 <br />
-                Km: <span ref={this.kmRef}>{daskborad.km}</span>
+                Km: <span ref={this.kmRef}>{dashboard.km}</span>
                 <br />
-                Cal: <span ref={this.calRef}>{daskborad.cal}</span>
+                Cal: <span ref={this.calRef}>{dashboard.cal}</span>
                 <br />
-                Km: <span ref={this.perKmRef}>{daskborad.kmPerc}%</span>
+                Km: <span ref={this.perKmRef}>{dashboard.kmPerc}%</span>
                 <br />
-                Energie: <span ref={this.perCalRef}>{daskborad.calPerc}%</span>
+                Energie: <span ref={this.perCalRef}>{dashboard.calPerc}%</span>
                 <br />
                 <Share share={this.shareHandler}/>
                 <div className="NextStep">
-                    <ProgressBar percentage={daskborad.kmPerc} kmPercorsi={daskborad.km} kmMancanti={daskborad.kmMancanti} />
+                    <ProgressBar percentage={dashboard.kmPerc} kmPercorsi={dashboard.km} kmMancanti={dashboard.kmMancanti} />
                     Mancano: <span>{nextStepDisplay.dif}</span> calorie per arrivare in <span>{nextStepDisplay.continente}</span>
                 </div>
-
-
-
-<div className="Circuito">
-    <div className="inner">
-        <Mappa className="Mappa"/>
-        <Percorso className="Percorso"/>
-        <div className="square"><PinBabbo /></div>
-    </div>
-</div>
-
-
-
-
-
+                <div className="Circuito">
+                    <div className="inner">
+                        <Mappa className="Mappa"/>
+                        <Percorso className="Percorso"/>
+                        <div className="square"><PinBabbo /></div>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -326,7 +308,9 @@ const mapStateToProps = (state) => {
         getUser: state.getUser,
         update: state.updateUser,
         score: state.score,
-        scoreShare: state.scoreShare
+        scoreShare: state.scoreShare,
+        orientation: state.orientation,
+        isMobile: state.isMobile
     }
 }
 
@@ -335,5 +319,7 @@ export default connect(
         getUsersAction, 
         updateUserAction, 
         getUserAction, 
-        scoreShareAction 
+        scoreShareAction,
+        getOrientationAction,
+        isMobileAction
     })(Home);
